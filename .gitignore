@@ -1,4 +1,4 @@
-# Python
+
 *.pyc
 __pycache__/
 *.pyo
@@ -7,7 +7,7 @@ env/
 venv/
 *.sqlite3
 
-# Django
+
 *.log
 *.pot
 *.pyc
@@ -16,9 +16,8 @@ db.sqlite3
 media/
 staticfiles/
 
-# VS Code
+
 .vscode/
 
-# Environment
 .env
         

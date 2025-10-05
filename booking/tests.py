@@ -14,7 +14,7 @@ class MovieBookingTestCase(APITestCase):
     
     def setUp(self):
         """Set up test data"""
-        # Create test users
+        
         self.user1 = User.objects.create_user(
             username='testuser1',
             email='test1@example.com',
@@ -26,13 +26,13 @@ class MovieBookingTestCase(APITestCase):
             password='testpass123'
         )
         
-        # Create test movie
+        
         self.movie = Movie.objects.create(
             title='Test Movie',
             duration_minutes=120
         )
         
-        # Create test show
+        
         self.show = Show.objects.create(
             movie=self.movie,
             screen_name='Screen 1',
@@ -40,7 +40,7 @@ class MovieBookingTestCase(APITestCase):
             total_seats=10
         )
         
-        # Get JWT tokens for authenticated requests
+      
         self.refresh1 = RefreshToken.for_user(self.user1)
         self.access_token1 = str(self.refresh1.access_token)
         self.refresh2 = RefreshToken.for_user(self.user2)
@@ -116,7 +116,7 @@ class MovieBookingTestCase(APITestCase):
         self.assertEqual(response.data['seat_number'], 5)
         self.assertEqual(response.data['status'], 'booked')
         
-        # Verify booking was created in database
+    
         booking = Booking.objects.get(id=response.data['id'])
         self.assertEqual(booking.user, self.user1)
         self.assertEqual(booking.show, self.show)
@@ -131,14 +131,14 @@ class MovieBookingTestCase(APITestCase):
 
     def test_book_seat_double_booking_prevention(self):
         """Test prevention of double booking"""
-        # First user books seat 5
+   
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token1}')
         url = reverse('book-show', kwargs={'show_id': self.show.id})
         data = {'seat_number': 5}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         
-        # Second user tries to book the same seat
+     
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token2}')
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
@@ -149,12 +149,11 @@ class MovieBookingTestCase(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token1}')
         url = reverse('book-show', kwargs={'show_id': self.show.id})
         
-        # Test seat number 0
         data = {'seat_number': 0}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         
-        # Test seat number exceeding total seats
+    
         data = {'seat_number': 15}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -169,7 +168,7 @@ class MovieBookingTestCase(APITestCase):
 
     def test_cancel_booking_success(self):
         """Test successful booking cancellation"""
-        # First, create a booking
+     
         booking = Booking.objects.create(
             user=self.user1,
             show=self.show,
@@ -183,7 +182,7 @@ class MovieBookingTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['booking']['status'], 'cancelled')
         
-        # Verify booking status changed in database
+       
         booking.refresh_from_db()
         self.assertEqual(booking.status, 'cancelled')
 
@@ -202,7 +201,7 @@ class MovieBookingTestCase(APITestCase):
 
     def test_cancel_others_booking_forbidden(self):
         """Test that users cannot cancel other users' bookings"""
-        # User1 creates a booking
+     
         booking = Booking.objects.create(
             user=self.user1,
             show=self.show,
@@ -210,7 +209,7 @@ class MovieBookingTestCase(APITestCase):
             status='booked'
         )
         
-        # User2 tries to cancel User1's booking
+      
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token2}')
         url = reverse('cancel-booking', kwargs={'booking_id': booking.id})
         response = self.client.post(url)
@@ -218,7 +217,7 @@ class MovieBookingTestCase(APITestCase):
 
     def test_my_bookings_list(self):
         """Test listing user's bookings"""
-        # Create bookings for user1
+     
         Booking.objects.create(
             user=self.user1,
             show=self.show,
@@ -232,7 +231,7 @@ class MovieBookingTestCase(APITestCase):
             status='cancelled'
         )
         
-        # Create booking for user2
+    
         Booking.objects.create(
             user=self.user2,
             show=self.show,
@@ -244,9 +243,9 @@ class MovieBookingTestCase(APITestCase):
         url = reverse('my-bookings')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data), 2)  # User1 has 2 bookings
+        self.assertEqual(len(response.data), 2)  
         
-        # Verify user1 only sees their own bookings
+        
         booking_ids = [booking['id'] for booking in response.data]
         self.assertNotIn(
             Booking.objects.get(user=self.user2, seat_number=3).id,
@@ -261,7 +260,7 @@ class MovieBookingTestCase(APITestCase):
 
     def test_booking_after_cancellation(self):
         """Test that seats can be rebooked after cancellation"""
-        # User1 books seat 5
+       
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token1}')
         url = reverse('book-show', kwargs={'show_id': self.show.id})
         data = {'seat_number': 5}
@@ -269,12 +268,12 @@ class MovieBookingTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         booking_id = response.data['id']
         
-        # User1 cancels the booking
+     
         url = reverse('cancel-booking', kwargs={'booking_id': booking_id})
         response = self.client.post(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         
-        # User2 can now book the same seat
+    
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token2}')
         url = reverse('book-show', kwargs={'show_id': self.show.id})
         data = {'seat_number': 5}
@@ -285,19 +284,19 @@ class MovieBookingTestCase(APITestCase):
         """Test available seats count after bookings"""
         url = reverse('available-seats', kwargs={'show_id': self.show.id})
         
-        # Initially all seats available
+       
         response = self.client.get(url)
         self.assertEqual(response.data['available_count'], 10)
         self.assertEqual(len(response.data['available_seats']), 10)
         
-        # Book a seat
+     
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token1}')
         book_url = reverse('book-show', kwargs={'show_id': self.show.id})
         data = {'seat_number': 7}
         self.client.post(book_url, data, format='json')
         
-        # Check available seats again
-        self.client.credentials()  # Remove authentication for this request
+ 
+        self.client.credentials()  
         response = self.client.get(url)
         self.assertEqual(response.data['available_count'], 9)
         self.assertEqual(len(response.data['available_seats']), 9)
@@ -306,16 +305,16 @@ class MovieBookingTestCase(APITestCase):
 
     def test_concurrent_booking_attempts(self):
         """Test handling of concurrent booking attempts"""
-        # This test simulates race condition scenarios
+       
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.access_token1}')
         url = reverse('book-show', kwargs={'show_id': self.show.id})
         data = {'seat_number': 8}
         
-        # First booking should succeed
+      
         response1 = self.client.post(url, data, format='json')
         self.assertEqual(response1.status_code, status.HTTP_201_CREATED)
         
-        # Second booking of same seat should fail (user already has booking for this seat)
+        
         response2 = self.client.post(url, data, format='json')
         self.assertEqual(response2.status_code, status.HTTP_409_CONFLICT)
 
@@ -380,5 +379,5 @@ class ModelTestCase(TestCase):
         self.assertIsNotNone(booking.created_at)
         self.assertLess(
             (timezone.now() - booking.created_at).total_seconds(),
-            5  # Created within last 5 seconds
+            5  
         )

@@ -15,7 +15,7 @@ from .serializers import (
 )
 from django.shortcuts import get_object_or_404
 
-# Signup
+
 class SignupView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -47,7 +47,7 @@ class SignupView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-# Login (returns JWT)
+
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -83,7 +83,7 @@ class LoginView(APIView):
             username = request.data.get('username')
             password = request.data.get('password')
             
-            # Input validation
+         
             if not username or not password:
                 return Response(
                     {"error": "Both username and password are required", "fields": ["username", "password"]}, 
@@ -109,7 +109,7 @@ class LoginView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-# List Movies
+
 class MovieListView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -118,7 +118,7 @@ class MovieListView(APIView):
         serializer = MovieSerializer(movies, many=True)
         return Response(serializer.data)
 
-# List Shows for a Movie
+
 class ShowListView(APIView):
     permission_classes = [permissions.AllowAny]
 
@@ -127,20 +127,20 @@ class ShowListView(APIView):
         serializer = ShowSerializer(shows, many=True)
         return Response(serializer.data)
 
-# Get Available Seats for a Show
+
 class AvailableSeatsView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, show_id):
         show = get_object_or_404(Show, id=show_id)
         
-        # Get booked seat numbers
+       
         booked_seats = set(
             Booking.objects.filter(show=show, status="booked")
             .values_list('seat_number', flat=True)
         )
         
-        # Get all available seats
+    
         all_seats = set(range(1, show.total_seats + 1))
         available_seats = sorted(list(all_seats - booked_seats))
         
@@ -152,7 +152,7 @@ class AvailableSeatsView(APIView):
             "available_count": len(available_seats)
         })
 
-# Book a Seat
+
 class BookShowView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -197,7 +197,7 @@ class BookShowView(APIView):
         show = get_object_or_404(Show, id=show_id)
         seat_number = request.data.get('seat_number')
 
-        # Input validation
+        
         if not seat_number:
             return Response(
                 {"error": "seat_number is required", "field": "seat_number"}, 
@@ -218,14 +218,14 @@ class BookShowView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Retry logic for concurrent booking attempts
+       
         max_retries = 3
-        retry_delay = 0.1  # 100ms
+        retry_delay = 0.1  
         
         for attempt in range(max_retries):
             try:
                 with transaction.atomic():
-                    # Check if seat is already booked (only check active bookings)
+                    
                     existing_booking = Booking.objects.select_for_update().filter(
                         show=show, seat_number=seat_number, status="booked"
                     ).first()
@@ -236,7 +236,7 @@ class BookShowView(APIView):
                             status=status.HTTP_409_CONFLICT
                         )
                     
-                    # Check if user already has a booking for this seat (to prevent duplicate bookings)
+                    
                     user_existing_booking = Booking.objects.filter(
                         show=show, seat_number=seat_number, user=request.user, status="booked"
                     ).first()
@@ -247,7 +247,7 @@ class BookShowView(APIView):
                             status=status.HTTP_400_BAD_REQUEST
                         )
 
-                    # Create the booking
+                 
                     booking = Booking.objects.create(
                         user=request.user,
                         show=show,
@@ -260,9 +260,9 @@ class BookShowView(APIView):
                     
             except IntegrityError as e:
                 if attempt < max_retries - 1:
-                    # Random delay to reduce collision probability
+            
                     time.sleep(retry_delay + random.uniform(0, 0.05))
-                    retry_delay *= 2  # Exponential backoff
+                    retry_delay *= 2  
                     continue
                 else:
                     return Response(
@@ -280,7 +280,7 @@ class BookShowView(APIView):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
 
-# Cancel Booking
+
 class CancelBookingView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -320,14 +320,14 @@ class CancelBookingView(APIView):
         try:
             booking = get_object_or_404(Booking, id=booking_id)
 
-            # Only owner can cancel
+           
             if booking.user != request.user:
                 return Response(
                     {"error": "You cannot cancel someone else's booking", "booking_id": booking_id}, 
                     status=status.HTTP_403_FORBIDDEN
                 )
 
-            # Check if booking is already cancelled
+    
             if booking.status == "cancelled":
                 return Response(
                     {"error": "Booking is already cancelled", "booking_id": booking_id}, 
@@ -347,7 +347,7 @@ class CancelBookingView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-# List My Bookings
+
 class MyBookingsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 

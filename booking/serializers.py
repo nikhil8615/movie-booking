@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Movie, Show, Booking
 
-# User Signup
+
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
 
@@ -18,13 +18,13 @@ class SignupSerializer(serializers.ModelSerializer):
         )
         return user
 
-# Movie Serializer
+
 class MovieSerializer(serializers.ModelSerializer):
     class Meta:
         model = Movie
         fields = ['id', 'title', 'duration_minutes']
 
-# Show Serializer
+
 class ShowSerializer(serializers.ModelSerializer):
     movie = MovieSerializer(read_only=True)
 
@@ -32,7 +32,7 @@ class ShowSerializer(serializers.ModelSerializer):
         model = Show
         fields = ['id', 'movie', 'screen_name', 'date_time', 'total_seats']
 
-# Booking Serializer
+
 class BookingSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
     show = ShowSerializer(read_only=True)

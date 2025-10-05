@@ -33,8 +33,7 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        # Removed unique_together constraint to allow rebooking after cancellation
-        # Double booking prevention is handled in application logic
+        
         pass
 
     def __str__(self):
