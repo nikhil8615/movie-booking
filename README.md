@@ -298,14 +298,14 @@ This project is licensed under the MIT License.
 
 **Nikhil Singh**
 
-- GitHub: [@nikhilsingh](https://github.com/nikhilsingh)
-- Email: nikhil@example.com
+- GitHub: [@nikhilsingh](https://github.com/nikhil8615)
+- Email: nikhilsingh8185@gmail.com
 
 ## 🆘 Support
 
 If you encounter any issues or have questions:
 
-1. Check the [Swagger documentation](http://127.0.0.1:8000/swagger/)
+1. Check the [Swagger documentation](http://127.0.0.1:8000/swagger/) (after running the server this link is active)
 2. Review the test cases for usage examples
 3. Open an issue on GitHub
 
