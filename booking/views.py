@@ -156,6 +156,43 @@ class AvailableSeatsView(APIView):
 class BookShowView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Book a seat for a specific show",
+        operation_summary="Book a Seat",
+        tags=['Bookings'],
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            required=['seat_number'],
+            properties={
+                'seat_number': openapi.Schema(
+                    type=openapi.TYPE_INTEGER,
+                    description='Seat number to book (1 to total_seats)',
+                    example=5
+                )
+            }
+        ),
+        responses={
+            201: openapi.Response(
+                description="Seat booked successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Booking ID'),
+                        'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
+                        'show': openapi.Schema(type=openapi.TYPE_INTEGER, description='Show ID'),
+                        'seat_number': openapi.Schema(type=openapi.TYPE_INTEGER, description='Seat number'),
+                        'status': openapi.Schema(type=openapi.TYPE_STRING, description='Booking status'),
+                        'created_at': openapi.Schema(type=openapi.TYPE_STRING, description='Creation timestamp'),
+                    }
+                )
+            ),
+            400: openapi.Response(description="Bad Request - Invalid seat number or missing required field"),
+            401: openapi.Response(description="Authentication credentials were not provided"),
+            404: openapi.Response(description="Show not found"),
+            409: openapi.Response(description="Conflict - Seat already booked or user already has booking for this seat"),
+        },
+        security=[{'Bearer': []}]
+    )
     def post(self, request, show_id):
         show = get_object_or_404(Show, id=show_id)
         seat_number = request.data.get('seat_number')
@@ -247,6 +284,38 @@ class BookShowView(APIView):
 class CancelBookingView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Cancel a booking by booking ID",
+        operation_summary="Cancel Booking",
+        tags=['Bookings'],
+        responses={
+            200: openapi.Response(
+                description="Booking cancelled successfully",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        'message': openapi.Schema(type=openapi.TYPE_STRING, description='Success message'),
+                        'booking': openapi.Schema(
+                            type=openapi.TYPE_OBJECT,
+                            properties={
+                                'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Booking ID'),
+                                'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
+                                'show': openapi.Schema(type=openapi.TYPE_INTEGER, description='Show ID'),
+                                'seat_number': openapi.Schema(type=openapi.TYPE_INTEGER, description='Seat number'),
+                                'status': openapi.Schema(type=openapi.TYPE_STRING, description='Booking status'),
+                                'created_at': openapi.Schema(type=openapi.TYPE_STRING, description='Creation timestamp'),
+                            }
+                        )
+                    }
+                )
+            ),
+            401: openapi.Response(description="Authentication credentials were not provided"),
+            403: openapi.Response(description="Forbidden - Cannot cancel someone else's booking"),
+            404: openapi.Response(description="Booking not found"),
+            400: openapi.Response(description="Bad Request - Booking already cancelled"),
+        },
+        security=[{'Bearer': []}]
+    )
     def post(self, request, booking_id):
         try:
             booking = get_object_or_404(Booking, id=booking_id)
@@ -282,6 +351,32 @@ class CancelBookingView(APIView):
 class MyBookingsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_description="Get all bookings for the authenticated user",
+        operation_summary="Get My Bookings",
+        tags=['Bookings'],
+        responses={
+            200: openapi.Response(
+                description="List of user's bookings",
+                schema=openapi.Schema(
+                    type=openapi.TYPE_ARRAY,
+                    items=openapi.Schema(
+                        type=openapi.TYPE_OBJECT,
+                        properties={
+                            'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='Booking ID'),
+                            'user': openapi.Schema(type=openapi.TYPE_INTEGER, description='User ID'),
+                            'show': openapi.Schema(type=openapi.TYPE_INTEGER, description='Show ID'),
+                            'seat_number': openapi.Schema(type=openapi.TYPE_INTEGER, description='Seat number'),
+                            'status': openapi.Schema(type=openapi.TYPE_STRING, description='Booking status'),
+                            'created_at': openapi.Schema(type=openapi.TYPE_STRING, description='Creation timestamp'),
+                        }
+                    )
+                )
+            ),
+            401: openapi.Response(description="Authentication credentials were not provided"),
+        },
+        security=[{'Bearer': []}]
+    )
     def get(self, request):
         bookings = Booking.objects.filter(user=request.user)
         serializer = BookingSerializer(bookings, many=True)

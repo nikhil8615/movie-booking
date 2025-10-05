@@ -78,6 +78,22 @@ The API will be available at: `http://127.0.0.1:8000/`
 
 Visit: `http://127.0.0.1:8000/swagger/` for interactive API documentation
 
+### Access the admin panel
+
+Visit: `http://127.0.0.1:8000/admin/` Only superusers can log in here. Use python manage.py createsuperuser to create a superuser.
+
+#### Using JWT Authentication in Swagger UI
+
+1. **Login first**: Use the `POST /api/login/` endpoint to get your JWT token
+2. **Authorize**: Click the **"Authorize"** button (🔒) at the top right
+3. **Enter token**: In the "Value" field, enter: `Bearer YOUR_ACCESS_TOKEN_HERE`
+4. **Test endpoints**: Now you can test all authenticated endpoints directly in Swagger UI
+
+**Alternative Documentation:**
+
+- **ReDoc**: `http://127.0.0.1:8000/redoc/`
+- **JSON Schema**: `http://127.0.0.1:8000/swagger.json`
+
 ### Available Endpoints
 
 | Method | Endpoint                           | Description             | Authentication |
@@ -147,16 +163,26 @@ curl -X GET http://127.0.0.1:8000/api/movies/
 ### 2. Get Shows for a Movie
 
 ```bash
-curl -X GET GET http://127.0.0.1:8000/api/movies/<movie_id>/shows/
+curl -X GET http://127.0.0.1:8000/api/movies/<movie_id>/shows/
 ```
 
 ### 3. Check Available Seats
 
 ```bash
-curl -X GET http://127.0.0.1:8000/api/shows/<movie_id>/available-seats/
+curl -X GET http://127.0.0.1:8000/api/shows/<show_id>/available-seats/
 ```
 
 ### 4. Book a Seat
+
+**Request Body Required:**
+
+```json
+{
+  "seat_number": 5
+}
+```
+
+**Example:**
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/shows/<show_id>/book/ \
@@ -164,6 +190,8 @@ curl -X POST http://127.0.0.1:8000/api/shows/<show_id>/book/ \
   -H "Content-Type: application/json" \
   -d '{"seat_number": 5}'
 ```
+
+**Note:** The `seat_number` field is required in the request body. Use the available seats endpoint to check which seats are available before booking.
 
 ### 5. Cancel a Booking
 
@@ -244,9 +272,9 @@ The API provides clear error messages for common scenarios:
 
 ### JWT Settings
 
-- Access token lifetime: 30 minutes
-- Refresh token lifetime: 1 day
-- Token rotation: Enabled
+- Access token lifetime: 24 hours (extended for testing)
+- Refresh token lifetime: 7 days (extended for testing)
+- Token rotation: Disabled
 
 ### Database
 
@@ -268,10 +296,10 @@ This project is licensed under the MIT License.
 
 ## 👨‍💻 Author
 
-**Your Name**
+**Nikhil Singh**
 
-- GitHub: [@yourusername](https://github.com/yourusername)
-- Email: your.email@example.com
+- GitHub: [@nikhilsingh](https://github.com/nikhilsingh)
+- Email: nikhil@example.com
 
 ## 🆘 Support
 
